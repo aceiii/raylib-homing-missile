@@ -8,10 +8,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SOURCE_FILES
-    main.cpp
-    vec2.cpp
-    missiles.cpp
-    random.cpp
+    src/main.cpp
+    src/vec2.cpp
+    src/missiles.cpp
+    src/random.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
