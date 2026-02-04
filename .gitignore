@@ -4,6 +4,8 @@ Thumbs.db
 .vscode/
 .cache/
 build/
+build*
+cmake-*
 
 # Prerequisites
 *.d
