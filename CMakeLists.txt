@@ -5,6 +5,7 @@ set(PROJECT_NAME tigr-test)
 project(${PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SOURCE_FILES
     main.cpp
