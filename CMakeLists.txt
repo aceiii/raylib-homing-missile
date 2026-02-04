@@ -8,10 +8,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SOURCE_FILES
+    src/application.cpp
+    src/application.h
+    src/game.cpp
+    src/game.h
     src/main.cpp
-    src/vec2.cpp
     src/missiles.cpp
+    src/missiles.h
     src/random.cpp
+    src/random.h
+    src/ray.h
+    src/vec2.cpp
+    src/vec2.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
