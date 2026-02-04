@@ -17,7 +17,7 @@ namespace {
     const int font_size{10};
     const int screen_width{800};
     const int screen_height{600};
-    const char *window_title = "Homing missiles!!11";
+    const char* window_title = "Homing missiles!!11";
 
     raylib::RenderTexture2D screen;
     raylib::Sound explode_sound;
@@ -82,7 +82,7 @@ void FireMissile() {
     missiles.push_back(m);
 }
 
-void Explode(const math::Vec2 &pos, float dt) {
+void Explode(const math::Vec2& pos, float dt) {
     const int n = 16;
     const float a = float(M_PI / n * 2);
     const float a_offset = math::DegToRad(float(rnd::RandomInt(0, 360.0f / n)));
@@ -109,7 +109,7 @@ void ShakeScreen(float dt) {
     screen_shake_time = 0.0f;
 }
 
-bool UpdateMissile(Missile &m, float dt) {
+bool UpdateMissile(Missile& m, float dt) {
     static const math::Vec2 drag {0.97f, 0.97f};
     static const math::Vec2 gravity {0.0f, -480.0f};
     static const float turn_radius = 200.0f;
@@ -188,18 +188,18 @@ bool UpdateMissile(Missile &m, float dt) {
 }
 
 void UpdateMissiles(float dt) {
-    auto it = std::remove_if(begin(missiles), end(missiles), [dt] (Missile &m) {
+    auto it = std::remove_if(begin(missiles), end(missiles), [dt] (Missile& m) {
         return !UpdateMissile(m, dt);
     });
 
     missiles.erase(it, end(missiles));
 
-    std::sort(begin(missiles), end(missiles), [] (const Missile &m1, const Missile &m2) {
+    std::sort(begin(missiles), end(missiles), [] (const Missile& m1, const Missile& m2) {
         return m1.position.x < m2.position.x;
     });
 }
 
-bool UpdateMissileParticle(MissileParticle &p, float dt) {
+bool UpdateMissileParticle(MissileParticle& p, float dt) {
     static const math::Vec2 force {0.0f, -200.0f};
     static const math::Vec2 drag {0.98f, 0.98f};
 
@@ -218,14 +218,14 @@ bool UpdateMissileParticle(MissileParticle &p, float dt) {
 
 void UpdateMissileParticles(float dt) {
     auto it = std::remove_if(begin(missile_particles), end(missile_particles),
-        [dt] (MissileParticle &p) {
+        [dt] (MissileParticle& p) {
             return !UpdateMissileParticle(p, dt);
         });
 
     missile_particles.erase(it, end(missile_particles));
 }
 
-bool UpdateExplosionParticle(ExplosionParticle &p, float dt) {
+bool UpdateExplosionParticle(ExplosionParticle& p, float dt) {
     static const math::Vec2 force {0.0f, 100.0f};
     static const math::Vec2 drag {0.99f, 0.99f};
 
@@ -244,7 +244,7 @@ bool UpdateExplosionParticle(ExplosionParticle &p, float dt) {
 
 void UpdateExplosionParticles(float dt) {
     auto it = std::remove_if(begin(explosion_particles), end(explosion_particles),
-        [dt] (ExplosionParticle &p) {
+        [dt] (ExplosionParticle& p) {
             return !UpdateExplosionParticle(p, dt);
         });
 
@@ -308,7 +308,7 @@ void Update(float dt) {
     UpdateExplosionParticles(dt);
 }
 
-void DrawMissile(const Missile &m) {
+void DrawMissile(const Missile& m) {
     static const auto live_color = raylib::Color{ 255, 255, 0, 255 };
     static const auto dead_color = raylib::Color{ 37, 221, 245, 255 };
     static const auto line_color = raylib::Color{ 192, 192, 192, 255 };
@@ -350,12 +350,12 @@ void DrawMissile(const Missile &m) {
 }
 
 void DrawMissiles() {
-    for (auto &m : missiles) {
+    for (auto& m : missiles) {
         DrawMissile(m);
     }
 }
 
-void DrawMissileParticle(const MissileParticle &p) {
+void DrawMissileParticle(const MissileParticle& p) {
     const auto color = raylib::Color{ 178, 178, 178, 255 };
 
     const int min = 2;
@@ -369,12 +369,12 @@ void DrawMissileParticle(const MissileParticle &p) {
 }
 
 void DrawMissleParticles() {
-    for (auto &p : missile_particles) {
+    for (auto& p : missile_particles) {
         DrawMissileParticle(p);
     }
 }
 
-void DrawExplosionParticle(const ExplosionParticle &p) {
+void DrawExplosionParticle(const ExplosionParticle& p) {
     const auto color = raylib::Color{ 255, 255, 255, 255 };
     const float length = math::Clamp(p.velocity.Distance() / 200.0f, 0.0f, 1.0f);
 
@@ -404,7 +404,7 @@ void DrawExplosionParticle(const ExplosionParticle &p) {
 }
 
 void DrawExplosionParticles() {
-    for (auto &p : explosion_particles) {
+    for (auto& p : explosion_particles) {
         DrawExplosionParticle(p);
     }
 }
