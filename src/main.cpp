@@ -1,11 +1,16 @@
 #include <iostream>
 #include <vector>
-#include <raylib.h>
 #include <spdlog/spdlog.h>
 
 #include "vec2.h"
 #include "missiles.h"
 #include "random.h"
+
+namespace raylib {
+    extern "C" {
+        #include <raylib.h>
+    }
+};
 
 
 namespace {
@@ -14,8 +19,8 @@ namespace {
     const int screen_height{600};
     const char *window_title = "Homing missiles!!11";
 
-    RenderTexture2D screen;
-    Sound explode_sound;
+    raylib::RenderTexture2D screen;
+    raylib::Sound explode_sound;
 
     bool debug{false};
 
@@ -37,25 +42,25 @@ namespace {
     std::vector<ExplosionParticle> explosion_particles;
 }
 
-void init() {
+void Init() {
     spdlog::info("Initializing interface");
-    InitWindow(screen_width, screen_height, window_title);
-    InitAudioDevice();
-    SetExitKey(KEY_ESCAPE);
-    SetTargetFPS(60);
+    raylib::InitWindow(screen_width, screen_height, window_title);
+    raylib::InitAudioDevice();
+    raylib::SetExitKey(raylib::KEY_ESCAPE);
+    raylib::SetTargetFPS(60);
 
-    screen = LoadRenderTexture(screen_width, screen_height);
-    explode_sound = LoadSound("resources/explode.mp3");
+    screen = raylib::LoadRenderTexture(screen_width, screen_height);
+    explode_sound = raylib::LoadSound("resources/explode.mp3");
 }
 
-void shutdown() {
-    UnloadSound(explode_sound);
-    UnloadRenderTexture(screen);
-    CloseAudioDevice();
-    CloseWindow();
+void Shutdown() {
+    raylib::UnloadSound(explode_sound);
+    raylib::UnloadRenderTexture(screen);
+    raylib::CloseAudioDevice();
+    raylib::CloseWindow();
 }
 
-void fireMissile() {
+void FireMissile() {
     const float life = 5.0f;
     const float velocity = 150.0f;
 
@@ -77,7 +82,7 @@ void fireMissile() {
     missiles.push_back(m);
 }
 
-void explode(const math::Vec2 &pos, float dt) {
+void Explode(const math::Vec2 &pos, float dt) {
     const int n = 16;
     const float a = float(M_PI / n * 2);
     const float a_offset = math::DegToRad(float(rnd::RandomInt(0, 360.0f / n)));
@@ -99,12 +104,12 @@ void explode(const math::Vec2 &pos, float dt) {
     }
 }
 
-void shakeScreen(float dt) {
+void ShakeScreen(float dt) {
     screen_shake_life = 0.5f;
     screen_shake_time = 0.0f;
 }
 
-bool updateMissile(Missile &m, float dt) {
+bool UpdateMissile(Missile &m, float dt) {
     static const math::Vec2 drag {0.97f, 0.97f};
     static const math::Vec2 gravity {0.0f, -480.0f};
     static const float turn_radius = 200.0f;
@@ -116,7 +121,7 @@ bool updateMissile(Missile &m, float dt) {
     m.life -= dt;
 
     if (m.life < -dead_time) {
-        explode(m.position, dt);
+        Explode(m.position, dt);
         return false;
     }
 
@@ -138,8 +143,8 @@ bool updateMissile(Missile &m, float dt) {
 
     if (diff.DistanceSquared() <= 5.0f) {
         PlaySound(explode_sound);
-        explode(m.position, dt);
-        shakeScreen(dt);
+        Explode(m.position, dt);
+        ShakeScreen(dt);
         return false;
     }
 
@@ -182,9 +187,9 @@ bool updateMissile(Missile &m, float dt) {
     return true;
 }
 
-void updateMissiles(float dt) {
+void UpdateMissiles(float dt) {
     auto it = std::remove_if(begin(missiles), end(missiles), [dt] (Missile &m) {
-        return !updateMissile(m, dt);
+        return !UpdateMissile(m, dt);
     });
 
     missiles.erase(it, end(missiles));
@@ -194,7 +199,7 @@ void updateMissiles(float dt) {
     });
 }
 
-bool updateMissileParticle(MissileParticle &p, float dt) {
+bool UpdateMissileParticle(MissileParticle &p, float dt) {
     static const math::Vec2 force {0.0f, -200.0f};
     static const math::Vec2 drag {0.98f, 0.98f};
 
@@ -211,16 +216,16 @@ bool updateMissileParticle(MissileParticle &p, float dt) {
     return true;
 }
 
-void updateMissileParticles(float dt) {
+void UpdateMissileParticles(float dt) {
     auto it = std::remove_if(begin(missile_particles), end(missile_particles),
         [dt] (MissileParticle &p) {
-            return !updateMissileParticle(p, dt);
+            return !UpdateMissileParticle(p, dt);
         });
 
     missile_particles.erase(it, end(missile_particles));
 }
 
-bool updateExplosionParticle(ExplosionParticle &p, float dt) {
+bool UpdateExplosionParticle(ExplosionParticle &p, float dt) {
     static const math::Vec2 force {0.0f, 100.0f};
     static const math::Vec2 drag {0.99f, 0.99f};
 
@@ -237,49 +242,49 @@ bool updateExplosionParticle(ExplosionParticle &p, float dt) {
     return true;
 }
 
-void updateExplosionParticles(float dt) {
+void UpdateExplosionParticles(float dt) {
     auto it = std::remove_if(begin(explosion_particles), end(explosion_particles),
         [dt] (ExplosionParticle &p) {
-            return !updateExplosionParticle(p, dt);
+            return !UpdateExplosionParticle(p, dt);
         });
 
     explosion_particles.erase(it, end(explosion_particles));
 }
 
-bool processEvents() {
-    if (IsKeyDown(KEY_D)) {
+bool ProcessEvents() {
+    if (raylib::IsKeyDown(raylib::KEY_D)) {
         debug = !debug;
     }
 
     return true;
 }
 
-void updateFPS(float dt) {
+void UpdateFPS(float dt) {
     frame_time = int(dt * 1000);
     fps = int(1.0f / dt);
 }
 
-void updateMouse(float dt) {
+void UpdateMouse(float dt) {
     // std::cout << "test" << dt << "\n";
 
-    Vector2 mouse_pos = GetMousePosition();
+    raylib::Vector2 mouse_pos = raylib::GetMousePosition();
     mouse_x = mouse_pos.x;
     mouse_y = mouse_pos.y;
 
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        fireMissile();
+    if (raylib::IsMouseButtonPressed(raylib::MOUSE_LEFT_BUTTON)) {
+        FireMissile();
     }
 
-    if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) {
+    if (raylib::IsMouseButtonDown(raylib::MOUSE_RIGHT_BUTTON)) {
         const int count = 32;
 
         for (int i = 0; i < count; i += 1) {
-            fireMissile();
+            FireMissile();
         }
     }
 }
 
-void updateScreenShake(float dt) {
+void UpdateScreenShake(float dt) {
     static const float shake_amount = 5.0f;
     static const float shake_speed = 48.0f;
 
@@ -294,36 +299,36 @@ void updateScreenShake(float dt) {
     screen_x = int(std::cos(screen_shake_life * shake_speed * 2) * shake_amount / 4.0f);
 }
 
-void update(float dt) {
-    updateMouse(dt);
-    updateScreenShake(dt);
+void Update(float dt) {
+    UpdateMouse(dt);
+    UpdateScreenShake(dt);
 
-    updateMissiles(dt);
-    updateMissileParticles(dt);
-    updateExplosionParticles(dt);
+    UpdateMissiles(dt);
+    UpdateMissileParticles(dt);
+    UpdateExplosionParticles(dt);
 }
 
-void drawMissile(const Missile &m) {
-    static const auto live_color =  Color { 255, 255, 0, 255 };
-    static const auto dead_color = Color { 37, 221, 245, 255 };
-    static const auto line_color = Color { 192, 192, 192, 255 };
-    static const auto text_color = Color { 255, 255, 255, 255 };
+void DrawMissile(const Missile &m) {
+    static const auto live_color = raylib::Color{ 255, 255, 0, 255 };
+    static const auto dead_color = raylib::Color{ 37, 221, 245, 255 };
+    static const auto line_color = raylib::Color{ 192, 192, 192, 255 };
+    static const auto text_color = raylib::Color{ 255, 255, 255, 255 };
 
     static const int w = 4;
     static const int h = 4;
     static const int margin = 2;
-    const int x = int(m.position.x);
-    const int y = int(m.position.y);
+    const int x{static_cast<int>(m.position.x)};
+    const int y{static_cast<int>(m.position.y)};
 
     math::Vec2 v;
     v = m.velocity;
     v.Multiply({-1.0f, -1.0f});
     v.SetDistance(16.0f);
 
-    const Color color = m.life < 0.0f ? dead_color : live_color;
+    const raylib::Color color = m.life < 0.0f ? dead_color : live_color;
 
-    DrawRectangle(x - (w / 2), y - (h / 2), w, h, color);
-    DrawLine(x, y, x + int(v.x), y + int(v.y), line_color);
+    raylib::DrawRectangle(x - (w / 2), y - (h / 2), w, h, color);
+    raylib::DrawLine(x, y, x + int(v.x), y + int(v.y), line_color);
 
     if (!debug) {
         return;
@@ -344,14 +349,14 @@ void drawMissile(const Missile &m) {
     DrawText(text, x + margin, y + margin, font_size, text_color);
 }
 
-void drawMissiles() {
+void DrawMissiles() {
     for (auto &m : missiles) {
-        drawMissile(m);
+        DrawMissile(m);
     }
 }
 
-void drawMissileParticle(const MissileParticle &p) {
-    const auto color = Color { 178, 178, 178, 255 };
+void DrawMissileParticle(const MissileParticle &p) {
+    const auto color = raylib::Color{ 178, 178, 178, 255 };
 
     const int min = 2;
     const int max = 8;
@@ -360,17 +365,17 @@ void drawMissileParticle(const MissileParticle &p) {
     const int x = int(p.position.x);
     const int y = int(p.position.y);
 
-    DrawRectangle(x - (w / 2), y - (h / 2), w, h, color);
+    raylib::DrawRectangle(x - (w / 2), y - (h / 2), w, h, color);
 }
 
-void drawMissleParticles() {
+void DrawMissleParticles() {
     for (auto &p : missile_particles) {
-        drawMissileParticle(p);
+        DrawMissileParticle(p);
     }
 }
 
-void drawExplosionParticle(const ExplosionParticle &p) {
-    const auto color = Color { 255, 255, 255, 255 };
+void DrawExplosionParticle(const ExplosionParticle &p) {
+    const auto color = raylib::Color{ 255, 255, 255, 255 };
     const float length = math::Clamp(p.velocity.Distance() / 200.0f, 0.0f, 1.0f);
 
     math::Vec2 d;
@@ -394,18 +399,18 @@ void drawExplosionParticle(const ExplosionParticle &p) {
     const int x = x1 - (w / 2);
     const int y = y1 - (h / 2);
 
-    DrawRectangle(x + screen_width, y + screen_height, w, h, Color { 190, 120, 0, 255 });
+    DrawRectangle(x + screen_width, y + screen_height, w, h, raylib::Color{ 190, 120, 0, 255 });
 
 }
 
-void drawExplosionParticles() {
+void DrawExplosionParticles() {
     for (auto &p : explosion_particles) {
-        drawExplosionParticle(p);
+        DrawExplosionParticle(p);
     }
 }
 
-void drawCrosshair() {
-    static const auto color = Color { 123, 175, 201, 255 };
+void DrawCrosshair() {
+    static const auto color = raylib::Color{ 123, 175, 201, 255 };
 
     const int x = mouse_x;
     const int y = mouse_y;
@@ -414,8 +419,8 @@ void drawCrosshair() {
     DrawLine(0, y, screen_width, y, color);
 }
 
-void drawArrow() {
-    const auto color = Color { 213, 246, 221, 255 };
+void DrawArrow() {
+    const auto color = raylib::Color{ 213, 246, 221, 255 };
 
     const int center_x = screen_width / 2;
     const int center_y = screen_height / 2;
@@ -429,8 +434,8 @@ void drawArrow() {
     DrawLine(center_x, center_y, center_x + static_cast<int>(v.x), center_y + static_cast<int>(v.y), color);
 }
 
-void drawFPS() {
-    static const auto color = Color { 255, 255, 255, 255 };
+void DrawFPS() {
+    static const auto color = raylib::Color{ 255, 255, 255, 255 };
     static const int margin = 8;
 
     char text[128];
@@ -442,8 +447,8 @@ void drawFPS() {
     DrawText(text, screen_width - width - margin, screen_height - height - margin, font_size, color);
 }
 
-void drawParticleInfo() {
-    static const auto color = Color { 255, 255, 255, 255 };
+void DrawParticleInfo() {
+    static const auto color = raylib::Color{ 255, 255, 255, 255 };
     static const int margin = 8;
     const int m_count = (int)missiles.size();
     const int s_count = (int)missile_particles.size();
@@ -457,8 +462,8 @@ void drawParticleInfo() {
     DrawText(text, margin, screen_height - 40 - margin, font_size, color);
 }
 
-void drawMouseInfo() {
-    const auto color = Color { 255, 255, 255, 255 };
+void DrawMouseInfo() {
+    const auto color = raylib::Color{ 255, 255, 255, 255 };
     const int margin = 8;
 
     const int mouse_window_x = mouse_x;
@@ -476,13 +481,13 @@ void drawMouseInfo() {
              "mouse position: (% 3d, %3d)\nmouse angle: % 3d deg\nbutton: % 3d",
              mouse_x, mouse_y, angle, mouse_buttons);
 
-    int width = MeasureText(text, font_size);
+    int width = raylib::MeasureText(text, font_size);
 
     DrawText(text, screen_width - width - margin, margin, font_size, color);
 }
 
-void drawGrid() {
-    static const auto color = Color { 148, 148, 148, 255 };
+void DrawGrid() {
+    static const auto color = raylib::Color{ 148, 148, 148, 255 };
     static const int grid_size = 60;
 
     const int half_width = screen_width / 2;
@@ -508,65 +513,65 @@ void drawGrid() {
     }
 }
 
-void render() {
+void Render() {
 
-    BeginTextureMode(screen);
-    ClearBackground({ 127, 127, 127, 255 });
+    raylib::BeginTextureMode(screen);
+    raylib::ClearBackground({ 127, 127, 127, 255 });
 
-    drawGrid();
+    DrawGrid();
 
-    drawMissleParticles();
-    drawExplosionParticles();
-    drawMissiles();
+    DrawMissleParticles();
+    DrawExplosionParticles();
+    DrawMissiles();
 
-    EndTextureMode();
-    BeginDrawing();
-    ClearBackground({ 64, 64, 64, 255 });
+    raylib::EndTextureMode();
+    raylib::BeginDrawing();
+    raylib::ClearBackground({ 64, 64, 64, 255 });
 
-    DrawTexturePro(
+    raylib::DrawTexturePro(
         screen.texture,
-        Rectangle { 0, 0, screen_width, -screen_height },
-        Rectangle { static_cast<float>(screen_x), static_cast<float>(screen_y), screen_width, screen_height },
-        Vector2 { 0, 0 },
+        raylib::Rectangle{ 0, 0, screen_width, -screen_height },
+        raylib::Rectangle{ static_cast<float>(screen_x), static_cast<float>(screen_y), screen_width, screen_height },
+        raylib::Vector2{ 0, 0 },
         0.0f,
-        WHITE
+        raylib::WHITE
     );
 
-    drawCrosshair();
-    drawArrow();
+    DrawCrosshair();
+    DrawArrow();
 
-    drawFPS();
-    drawParticleInfo();
-    drawMouseInfo();
+    DrawFPS();
+    DrawParticleInfo();
+    DrawMouseInfo();
 
-    EndDrawing();
+    raylib::EndDrawing();
 }
 
-void run() {
+void Run() {
     const double dt {0.01f};
     double accumulator {0.0f};
-    while (!WindowShouldClose()) {
-        if (!processEvents()) {
+    while (!raylib::WindowShouldClose()) {
+        if (!ProcessEvents()) {
             break;
         }
 
-        float time = GetFrameTime();
+        float time = raylib::GetFrameTime();
         accumulator += time;
 
-        updateFPS(time);
+        UpdateFPS(time);
 
         while (accumulator >= dt) {
-            update(dt);
+            Update(dt);
             accumulator -= dt;
         }
 
-        render();
+        Render();
     }
 }
 
 int main() {
-    init();
-    run();
-    shutdown();
+    Init();
+    Run();
+    Shutdown();
     return 0;
 }
