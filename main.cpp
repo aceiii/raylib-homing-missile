@@ -32,9 +32,9 @@ namespace {
     float screen_shake_time {0.0f};
     float screen_shake_life {0.0f};
 
-    std::vector<missile_t> missiles;
-    std::vector<missile_particle_t> missile_particles;
-    std::vector<explosion_particle_t> explosion_particles;
+    std::vector<Missile> missiles;
+    std::vector<MissileParticle> missile_particles;
+    std::vector<ExplosionParticle> explosion_particles;
 }
 
 void init() {
@@ -45,7 +45,7 @@ void init() {
     SetTargetFPS(60);
 
     screen = LoadRenderTexture(screen_width, screen_height);
-    explode_sound = LoadSound("explode.wav");
+    explode_sound = LoadSound("resources/explode.mp3");
 }
 
 void shutdown() {
@@ -67,7 +67,7 @@ void fireMissile() {
     const float rand_v = (float)randomInt(0, 20);
     const float rand_l = float((randomInt(0, 100) / 100.0f) * 5.0f);
 
-    missile_t m;
+    Missile m;
     m.position.set({float(center_x), float(center_y)});
     m.life = life + rand_l;
 
@@ -77,7 +77,7 @@ void fireMissile() {
     missiles.push_back(m);
 }
 
-void explode(const vec2_t &pos, float dt) {
+void explode(const Vec2 &pos, float dt) {
     const int n = 16;
     const float a = float(M_PI / n * 2);
     const float a_offset = degToRad(float(randomInt(0, 360.0f / n)));
@@ -88,7 +88,7 @@ void explode(const vec2_t &pos, float dt) {
         const float p_offset = float(randomInt(0, 50));
         const float r_life = 0.9f + ((randomInt(0, 100) / 100.0f) * 0.5f);
 
-        explosion_particle_t p;
+        ExplosionParticle p;
         p.position.set(pos);
         p.velocity.fromAngle(r + a_offset);
         p.velocity.setDistance(pow + p_offset);
@@ -104,9 +104,9 @@ void shakeScreen(float dt) {
     screen_shake_time = 0.0f;
 }
 
-bool updateMissile(missile_t &m, float dt) {
-    static const vec2_t drag {0.97f, 0.97f};
-    static const vec2_t gravity {0.0f, -480.0f};
+bool updateMissile(Missile &m, float dt) {
+    static const Vec2 drag {0.97f, 0.97f};
+    static const Vec2 gravity {0.0f, -480.0f};
     static const float turn_radius = 200.0f;
     static const float dead_time = 2.0f;
 
@@ -132,7 +132,7 @@ bool updateMissile(missile_t &m, float dt) {
     m.target.set({float(target_x), float(target_y)});
     m.position.add({m.velocity.x * dt, m.velocity.y * dt});
 
-    vec2_t diff;
+    Vec2 diff;
     diff.set(m.target);
     diff.subtract(m.position);
 
@@ -147,7 +147,7 @@ bool updateMissile(missile_t &m, float dt) {
     if (r == 0) {
         const float r_time = 0.4f + ((randomInt(0, 100) / 100.0f) * 1.2f);
 
-        missile_particle_t p;
+        MissileParticle p;
         p.life = r_time;
         p.position.set(m.position);
 
@@ -173,7 +173,7 @@ bool updateMissile(missile_t &m, float dt) {
         current_angle -= std::min(turn_radius * dt, 360.0f - diff_angle);
     }
 
-    vec2_t new_vel;
+    Vec2 new_vel;
     new_vel.fromAngle(degToRad(current_angle));
     new_vel.setDistance(m.velocity.distance());
 
@@ -183,20 +183,20 @@ bool updateMissile(missile_t &m, float dt) {
 }
 
 void updateMissiles(float dt) {
-    auto it = std::remove_if(begin(missiles), end(missiles), [dt] (missile_t &m) {
+    auto it = std::remove_if(begin(missiles), end(missiles), [dt] (Missile &m) {
         return !updateMissile(m, dt);
     });
 
     missiles.erase(it, end(missiles));
 
-    std::sort(begin(missiles), end(missiles), [] (const missile_t &m1, const missile_t &m2) {
+    std::sort(begin(missiles), end(missiles), [] (const Missile &m1, const Missile &m2) {
         return m1.position.x < m2.position.x;
     });
 }
 
-bool updateMissileParticle(missile_particle_t &p, float dt) {
-    static const vec2_t force {0.0f, -200.0f};
-    static const vec2_t drag {0.98f, 0.98f};
+bool updateMissileParticle(MissileParticle &p, float dt) {
+    static const Vec2 force {0.0f, -200.0f};
+    static const Vec2 drag {0.98f, 0.98f};
 
     p.time += dt;
 
@@ -213,16 +213,16 @@ bool updateMissileParticle(missile_particle_t &p, float dt) {
 
 void updateMissileParticles(float dt) {
     auto it = std::remove_if(begin(missile_particles), end(missile_particles),
-        [dt] (missile_particle_t &p) {
+        [dt] (MissileParticle &p) {
             return !updateMissileParticle(p, dt);
         });
 
     missile_particles.erase(it, end(missile_particles));
 }
 
-bool updateExplosionParticle(explosion_particle_t &p, float dt) {
-    static const vec2_t force {0.0f, 100.0f};
-    static const vec2_t drag {0.99f, 0.99f};
+bool updateExplosionParticle(ExplosionParticle &p, float dt) {
+    static const Vec2 force {0.0f, 100.0f};
+    static const Vec2 drag {0.99f, 0.99f};
 
     p.time += dt;
 
@@ -239,7 +239,7 @@ bool updateExplosionParticle(explosion_particle_t &p, float dt) {
 
 void updateExplosionParticles(float dt) {
     auto it = std::remove_if(begin(explosion_particles), end(explosion_particles),
-        [dt] (explosion_particle_t &p) {
+        [dt] (ExplosionParticle &p) {
             return !updateExplosionParticle(p, dt);
         });
 
@@ -303,7 +303,7 @@ void update(float dt) {
     updateExplosionParticles(dt);
 }
 
-void drawMissile(const missile_t &m) {
+void drawMissile(const Missile &m) {
     static const auto live_color =  Color { 255, 255, 0, 255 };
     static const auto dead_color = Color { 37, 221, 245, 255 };
     static const auto line_color = Color { 192, 192, 192, 255 };
@@ -315,7 +315,7 @@ void drawMissile(const missile_t &m) {
     const int x = int(m.position.x);
     const int y = int(m.position.y);
 
-    vec2_t v;
+    Vec2 v;
     v.set(m.velocity);
     v.multiply({-1.0f, -1.0f});
     v.setDistance(16.0f);
@@ -329,7 +329,7 @@ void drawMissile(const missile_t &m) {
         return;
     }
 
-    vec2_t t;
+    Vec2 t;
     t.set(m.target);
     t.subtract(m.position);
     t.subtract(m.velocity);
@@ -350,7 +350,7 @@ void drawMissiles() {
     }
 }
 
-void drawMissileParticle(const missile_particle_t &p) {
+void drawMissileParticle(const MissileParticle &p) {
     const auto color = Color { 178, 178, 178, 255 };
 
     const int min = 2;
@@ -369,16 +369,16 @@ void drawMissleParticles() {
     }
 }
 
-void drawExplosionParticle(const explosion_particle_t &p) {
+void drawExplosionParticle(const ExplosionParticle &p) {
     const auto color = Color { 255, 255, 255, 255 };
     const float length = clamp(p.velocity.distance() / 200.0f, 0.0f, 1.0f);
 
-    vec2_t d;
+    Vec2 d;
     d.set(p.velocity);
     d.multiply({-1.0f, -1.0f});
     d.setDistance(length * 12.0f);
 
-    vec2_t v;
+    Vec2 v;
     v.set(p.position);
     v.add(d);
 
@@ -423,7 +423,7 @@ void drawArrow() {
     const int target_x = mouse_x;
     const int target_y = mouse_y;
 
-    vec2_t v {float(target_x - center_x), float(target_y - center_y)};
+    Vec2 v {float(target_x - center_x), float(target_y - center_y)};
     v.setDistance(24.0f);
 
     DrawLine(center_x, center_y, center_x + static_cast<int>(v.x), center_y + static_cast<int>(v.y), color);
@@ -468,7 +468,7 @@ void drawMouseInfo() {
     const int center_y = screen_height / 2;
 
 
-    vec2_t v {float(mouse_window_x - center_x), float(mouse_window_y - center_y)};
+    Vec2 v {float(mouse_window_x - center_x), float(mouse_window_y - center_y)};
     const int angle = (int)radToDeg(v.angle());
 
     char text[128];

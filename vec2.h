@@ -14,11 +14,11 @@ float radToDeg(float rad);
 float clamp(float value, float min, float max);
 
 
-struct vec2_t {
+struct Vec2 {
     float x {0.0f};
     float y {0.0f};
 
-    inline void set(const vec2_t &v) {
+    inline void set(const Vec2 &v) {
         x = v.x;
         y = v.y;
     }
@@ -28,22 +28,22 @@ struct vec2_t {
         y = std::sin(radians);
     }
 
-    inline void add(const vec2_t &v) {
+    inline void add(const Vec2 &v) {
         x += v.x;
         y += v.y;
     }
 
-    inline void subtract(const vec2_t &v) {
+    inline void subtract(const Vec2 &v) {
         x -= v.x;
         y -= v.y;
     }
 
-    inline void multiply(const vec2_t &v) {
+    inline void multiply(const Vec2 &v) {
         x *= v.x;
         y *= v.y;
     }
 
-    inline void divide(const vec2_t &v) {
+    inline void divide(const Vec2 &v) {
         x /= v.x;
         y /= v.y;
     }
