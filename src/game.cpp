@@ -259,15 +259,6 @@ void UpdateScreenShake(float dt) {
     screen_x = int(std::cos(screen_shake_life * shake_speed * 2) * shake_amount / 4.0f);
 }
 
-void Update(float dt) {
-    UpdateMouse(dt);
-    UpdateScreenShake(dt);
-
-    UpdateMissiles(dt);
-    UpdateMissileParticles(dt);
-    UpdateExplosionParticles(dt);
-}
-
 void DrawMissile(const Missile& m) {
     static const auto live_color = raylib::Color{ 255, 255, 0, 255 };
     static const auto dead_color = raylib::Color{ 37, 221, 245, 255 };
@@ -486,7 +477,12 @@ void Game::OnCleanup() {
 }
 
 void Game::OnUpdate(float dt) {
+    UpdateMouse(dt);
+    UpdateScreenShake(dt);
 
+    UpdateMissiles(dt);
+    UpdateMissileParticles(dt);
+    UpdateExplosionParticles(dt);
 }
 
 void Game::OnRender() {
