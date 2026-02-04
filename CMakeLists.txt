@@ -15,7 +15,7 @@ set(SOURCE_FILES
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-find_package(raylib CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
+add_subdirectory(external/raylib)
+add_subdirectory(external/spdlog)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE raylib spdlog::spdlog)
