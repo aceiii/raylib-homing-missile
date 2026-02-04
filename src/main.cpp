@@ -9,28 +9,28 @@
 
 
 namespace {
-    const int font_size = 10;
-    const int screen_width {800};
-    const int screen_height {600};
+    const int font_size{10};
+    const int screen_width{800};
+    const int screen_height{600};
     const char *window_title = "Homing missiles!!11";
 
     RenderTexture2D screen;
     Sound explode_sound;
 
-    bool debug {false};
+    bool debug{false};
 
-    int frame_time {0};
-    int fps {0};
+    int frame_time{0};
+    int fps{0};
 
-    int mouse_x {0};
-    int mouse_y {0};
-    int mouse_buttons {0};
+    int mouse_x{0};
+    int mouse_y{0};
+    int mouse_buttons{0};
 
-    int screen_x {0};
-    int screen_y {0};
+    int screen_x{0};
+    int screen_y{0};
 
-    float screen_shake_time {0.0f};
-    float screen_shake_life {0.0f};
+    float screen_shake_time{0.0f};
+    float screen_shake_life{0.0f};
 
     std::vector<Missile> missiles;
     std::vector<MissileParticle> missile_particles;
@@ -62,36 +62,36 @@ void fireMissile() {
     const int center_x = screen_width / 2;
     const int center_y = screen_height / 2;
 
-    const float rand_x = (float)randomInt(-center_x, center_x);
-    const float rand_y = (float)randomInt(-center_y, center_y);
-    const float rand_v = (float)randomInt(0, 20);
-    const float rand_l = float((randomInt(0, 100) / 100.0f) * 5.0f);
+    const float rand_x = (float)rnd::RandomInt(-center_x, center_x);
+    const float rand_y = (float)rnd::RandomInt(-center_y, center_y);
+    const float rand_v = (float)rnd::RandomInt(0, 20);
+    const float rand_l = float((rnd::RandomInt(0, 100) / 100.0f) * 5.0f);
 
     Missile m;
-    m.position.set({float(center_x), float(center_y)});
+    m.position = {float(center_x), float(center_y)};
     m.life = life + rand_l;
 
-    m.velocity.set({rand_x, rand_y});
-    m.velocity.setDistance(velocity + rand_v);
+    m.velocity = {rand_x, rand_y};
+    m.velocity.SetDistance(velocity + rand_v);
 
     missiles.push_back(m);
 }
 
-void explode(const Vec2 &pos, float dt) {
+void explode(const math::Vec2 &pos, float dt) {
     const int n = 16;
     const float a = float(M_PI / n * 2);
-    const float a_offset = degToRad(float(randomInt(0, 360.0f / n)));
+    const float a_offset = math::DegToRad(float(rnd::RandomInt(0, 360.0f / n)));
     const float pow = 80.0f;
 
     float r = 0.0f;
     for (int i = 0; i < n; i += 1) {
-        const float p_offset = float(randomInt(0, 50));
-        const float r_life = 0.9f + ((randomInt(0, 100) / 100.0f) * 0.5f);
+        const float p_offset = float(rnd::RandomInt(0, 50));
+        const float r_life = 0.9f + ((rnd::RandomInt(0, 100) / 100.0f) * 0.5f);
 
         ExplosionParticle p;
-        p.position.set(pos);
-        p.velocity.fromAngle(r + a_offset);
-        p.velocity.setDistance(pow + p_offset);
+        p.position = pos;
+        p.velocity.FromAngle(r + a_offset);
+        p.velocity.SetDistance(pow + p_offset);
         p.life = r_life;
 
         explosion_particles.push_back(p);
@@ -105,8 +105,8 @@ void shakeScreen(float dt) {
 }
 
 bool updateMissile(Missile &m, float dt) {
-    static const Vec2 drag {0.97f, 0.97f};
-    static const Vec2 gravity {0.0f, -480.0f};
+    static const math::Vec2 drag {0.97f, 0.97f};
+    static const math::Vec2 gravity {0.0f, -480.0f};
     static const float turn_radius = 200.0f;
     static const float dead_time = 2.0f;
 
@@ -121,47 +121,47 @@ bool updateMissile(Missile &m, float dt) {
     }
 
     if (m.life <= 0.0f) {
-        m.velocity.multiply(drag);
-        m.velocity.subtract({gravity.x * dt, gravity.y * dt});
-        m.position.add({m.velocity.x * dt, m.velocity.y * dt});
+        m.velocity.Multiply(drag);
+        m.velocity.Subtract({gravity.x * dt, gravity.y * dt});
+        m.position.Add({m.velocity.x * dt, m.velocity.y * dt});
 
 
         return true;
     }
 
-    m.target.set({float(target_x), float(target_y)});
-    m.position.add({m.velocity.x * dt, m.velocity.y * dt});
+    m.target = math::Vec2{float(target_x), float(target_y)};
+    m.position.Add({m.velocity.x * dt, m.velocity.y * dt});
 
-    Vec2 diff;
-    diff.set(m.target);
-    diff.subtract(m.position);
+    math::Vec2 diff;
+    diff = m.target;
+    diff.Subtract(m.position);
 
-    if (diff.distanceSquared() <= 5.0f) {
+    if (diff.DistanceSquared() <= 5.0f) {
         PlaySound(explode_sound);
         explode(m.position, dt);
         shakeScreen(dt);
         return false;
     }
 
-    int r = randomInt(0, 4);
+    int r = rnd::RandomInt(0, 4);
     if (r == 0) {
-        const float r_time = 0.4f + ((randomInt(0, 100) / 100.0f) * 1.2f);
+        const float r_time = 0.4f + ((rnd::RandomInt(0, 100) / 100.0f) * 1.2f);
 
         MissileParticle p;
         p.life = r_time;
-        p.position.set(m.position);
+        p.position = m.position;
 
-        float particle_angle = radToDeg(m.velocity.angle());
-        particle_angle += float(randomInt(-3, 3));
+        float particle_angle = math::RadToDeg(m.velocity.Angle());
+        particle_angle += float(rnd::RandomInt(-3, 3));
 
-        p.velocity.fromAngle(degToRad(-particle_angle));
-        p.velocity.setDistance(32.0f * dt);
+        p.velocity.FromAngle(math::DegToRad(-particle_angle));
+        p.velocity.SetDistance(32.0f * dt);
 
         missile_particles.push_back(p);
     }
 
-    const float target_angle = radToDeg(diff.angle());
-    float current_angle = radToDeg(m.velocity.angle());
+    const float target_angle = math::RadToDeg(diff.Angle());
+    float current_angle = math::RadToDeg(m.velocity.Angle());
     float diff_angle = target_angle - current_angle;
     while (diff_angle < 0) {
         diff_angle += 360.0f;
@@ -173,11 +173,11 @@ bool updateMissile(Missile &m, float dt) {
         current_angle -= std::min(turn_radius * dt, 360.0f - diff_angle);
     }
 
-    Vec2 new_vel;
-    new_vel.fromAngle(degToRad(current_angle));
-    new_vel.setDistance(m.velocity.distance());
+    math::Vec2 new_vel;
+    new_vel.FromAngle(math::DegToRad(current_angle));
+    new_vel.SetDistance(m.velocity.Distance());
 
-    m.velocity.set(new_vel);
+    m.velocity = new_vel;
 
     return true;
 }
@@ -195,8 +195,8 @@ void updateMissiles(float dt) {
 }
 
 bool updateMissileParticle(MissileParticle &p, float dt) {
-    static const Vec2 force {0.0f, -200.0f};
-    static const Vec2 drag {0.98f, 0.98f};
+    static const math::Vec2 force {0.0f, -200.0f};
+    static const math::Vec2 drag {0.98f, 0.98f};
 
     p.time += dt;
 
@@ -204,9 +204,9 @@ bool updateMissileParticle(MissileParticle &p, float dt) {
         return false;
     }
 
-    p.velocity.multiply(drag);
-    p.velocity.add({force.x * dt, force.y * dt});
-    p.position.add({p.velocity.x * dt, p.velocity.y * dt});
+    p.velocity.Multiply(drag);
+    p.velocity.Add({force.x * dt, force.y * dt});
+    p.position.Add({p.velocity.x * dt, p.velocity.y * dt});
 
     return true;
 }
@@ -221,8 +221,8 @@ void updateMissileParticles(float dt) {
 }
 
 bool updateExplosionParticle(ExplosionParticle &p, float dt) {
-    static const Vec2 force {0.0f, 100.0f};
-    static const Vec2 drag {0.99f, 0.99f};
+    static const math::Vec2 force {0.0f, 100.0f};
+    static const math::Vec2 drag {0.99f, 0.99f};
 
     p.time += dt;
 
@@ -230,9 +230,9 @@ bool updateExplosionParticle(ExplosionParticle &p, float dt) {
         return false;
     }
 
-    p.velocity.multiply(drag);
-    p.velocity.add({force.x * dt, force.y * dt});
-    p.position.add({p.velocity.x * dt, p.velocity.y * dt});
+    p.velocity.Multiply(drag);
+    p.velocity.Add({force.x * dt, force.y * dt});
+    p.position.Add({p.velocity.x * dt, p.velocity.y * dt});
 
     return true;
 }
@@ -315,10 +315,10 @@ void drawMissile(const Missile &m) {
     const int x = int(m.position.x);
     const int y = int(m.position.y);
 
-    Vec2 v;
-    v.set(m.velocity);
-    v.multiply({-1.0f, -1.0f});
-    v.setDistance(16.0f);
+    math::Vec2 v;
+    v = m.velocity;
+    v.Multiply({-1.0f, -1.0f});
+    v.SetDistance(16.0f);
 
     const Color color = m.life < 0.0f ? dead_color : live_color;
 
@@ -329,17 +329,17 @@ void drawMissile(const Missile &m) {
         return;
     }
 
-    Vec2 t;
-    t.set(m.target);
-    t.subtract(m.position);
-    t.subtract(m.velocity);
+    math::Vec2 t;
+    t = m.target;
+    t.Subtract(m.position);
+    t.Subtract(m.velocity);
 
     char text[256];
     snprintf(text, sizeof(text), "p:(% 3d, % 3d)\nv:(% 3d, %3d)\na:% 4.2f\nta:% 4.2f",
              x, y,
              int(m.velocity.x), int(m.velocity.y),
-             radToDeg(m.velocity.angle()),
-             radToDeg(t.angle()));
+             math::RadToDeg(m.velocity.Angle()),
+             math::RadToDeg(t.Angle()));
 
     DrawText(text, x + margin, y + margin, font_size, text_color);
 }
@@ -371,16 +371,16 @@ void drawMissleParticles() {
 
 void drawExplosionParticle(const ExplosionParticle &p) {
     const auto color = Color { 255, 255, 255, 255 };
-    const float length = clamp(p.velocity.distance() / 200.0f, 0.0f, 1.0f);
+    const float length = math::Clamp(p.velocity.Distance() / 200.0f, 0.0f, 1.0f);
 
-    Vec2 d;
-    d.set(p.velocity);
-    d.multiply({-1.0f, -1.0f});
-    d.setDistance(length * 12.0f);
+    math::Vec2 d;
+    d = p.velocity;
+    d.Multiply({-1.0f, -1.0f});
+    d.SetDistance(length * 12.0f);
 
-    Vec2 v;
-    v.set(p.position);
-    v.add(d);
+    math::Vec2 v;
+    v = p.position;
+    v.Add(d);
 
     const int x1 = int(p.position.x);
     const int y1 = int(p.position.y);
@@ -423,8 +423,8 @@ void drawArrow() {
     const int target_x = mouse_x;
     const int target_y = mouse_y;
 
-    Vec2 v {float(target_x - center_x), float(target_y - center_y)};
-    v.setDistance(24.0f);
+    math::Vec2 v {float(target_x - center_x), float(target_y - center_y)};
+    v.SetDistance(24.0f);
 
     DrawLine(center_x, center_y, center_x + static_cast<int>(v.x), center_y + static_cast<int>(v.y), color);
 }
@@ -468,8 +468,8 @@ void drawMouseInfo() {
     const int center_y = screen_height / 2;
 
 
-    Vec2 v {float(mouse_window_x - center_x), float(mouse_window_y - center_y)};
-    const int angle = (int)radToDeg(v.angle());
+    math::Vec2 v {float(mouse_window_x - center_x), float(mouse_window_y - center_y)};
+    const int angle = (int)math::RadToDeg(v.Angle());
 
     char text[128];
     snprintf(text, sizeof(text),

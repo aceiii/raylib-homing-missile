@@ -1,14 +1,14 @@
 #include "vec2.h"
 
 
-float degToRad(float deg) {
+float math::DegToRad(float deg) {
     return deg / 180.0f * float(M_PI);
 }
 
-float radToDeg(float rad) {
+float math::RadToDeg(float rad) {
     return rad / float(M_PI) * 180.0f;
 }
 
-float clamp(float value, float min, float max) {
+float math::Clamp(float value, float min, float max) {
     return std::fmin(std::fmax(value, min), max);
 }

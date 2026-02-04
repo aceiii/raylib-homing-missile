@@ -4,72 +4,63 @@
 #include <cmath>
 
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846264338327950288
-#endif//M_PI
+namespace math {
 
+    float DegToRad(float deg);
+    float RadToDeg(float rad);
+    float Clamp(float value, float min, float max);
 
-float degToRad(float deg);
-float radToDeg(float rad);
-float clamp(float value, float min, float max);
+    struct Vec2 {
+        float x{0.0f};
+        float y{0.0f};
 
+        inline void FromAngle(float radians) {
+            x = std::cos(radians);
+            y = std::sin(radians);
+        }
 
-struct Vec2 {
-    float x {0.0f};
-    float y {0.0f};
+        inline void Add(const Vec2 &v) {
+            x += v.x;
+            y += v.y;
+        }
 
-    inline void set(const Vec2 &v) {
-        x = v.x;
-        y = v.y;
-    }
+        inline void Subtract(const Vec2 &v) {
+            x -= v.x;
+            y -= v.y;
+        }
 
-    inline void fromAngle(float radians) {
-        x = std::cos(radians);
-        y = std::sin(radians);
-    }
+        inline void Multiply(const Vec2 &v) {
+            x *= v.x;
+            y *= v.y;
+        }
 
-    inline void add(const Vec2 &v) {
-        x += v.x;
-        y += v.y;
-    }
+        inline void Divide(const Vec2 &v) {
+            x /= v.x;
+            y /= v.y;
+        }
 
-    inline void subtract(const Vec2 &v) {
-        x -= v.x;
-        y -= v.y;
-    }
+        inline float DistanceSquared() const {
+            return (x * x) + (y * y);
+        }
 
-    inline void multiply(const Vec2 &v) {
-        x *= v.x;
-        y *= v.y;
-    }
+        inline float Distance() const {
+            return std::sqrt(DistanceSquared());
+        }
 
-    inline void divide(const Vec2 &v) {
-        x /= v.x;
-        y /= v.y;
-    }
+        inline void Normalize() {
+            float dist = Distance();
+            Divide({dist, dist});
+        }
 
-    inline float distanceSquared() const {
-        return (x * x) + (y * y);
-    }
+        inline void SetDistance(float distance) {
+            Normalize();
+            Multiply({distance, distance});
+        }
 
-    inline float distance() const {
-        return std::sqrt(distanceSquared());
-    }
-
-    inline void normalize() {
-        float dist = distance();
-        divide({dist, dist});
-    }
-
-    inline void setDistance(float distance) {
-        normalize();
-        multiply({distance, distance});
-    }
-
-    inline float angle() const {
-        return std::atan2(y, x);
-    }
-
-};
+        inline float Angle() const {
+            return std::atan2(y, x);
+        }
+    };
+}
 
 #endif//__VEC2_H__
