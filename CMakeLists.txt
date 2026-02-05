@@ -13,13 +13,13 @@ set(SOURCE_FILES
     src/game.cpp
     src/game.h
     src/main.cpp
+    src/math.h
+    src/math.cpp
     src/missiles.cpp
     src/missiles.h
     src/random.cpp
     src/random.h
     src/ray.h
-    src/vec2.cpp
-    src/vec2.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

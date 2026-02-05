@@ -2,7 +2,6 @@
 
 #include "ray.h"
 #include "game.h"
-#include "vec2.h"
 #include "missiles.h"
 #include "random.h"
 
@@ -46,9 +45,7 @@ void FireMissile() {
     Missile m;
     m.position = {float(center_x), float(center_y)};
     m.life = life + rand_l;
-
-    m.velocity = {rand_x, rand_y};
-    m.velocity.SetDistance(velocity + rand_v);
+    m.velocity = math::Vec2WithLength(math::Vec2{rand_x, rand_y}, velocity + rand_v);
 
     missiles.push_back(m);
 }
@@ -66,8 +63,7 @@ void Explode(const math::Vec2& pos, float dt) {
 
         ExplosionParticle p;
         p.position = pos;
-        p.velocity.FromAngle(r + a_offset);
-        p.velocity.SetDistance(pow + p_offset);
+        p.velocity = math::Vec2WithLength(math::Vec2FromAngle(r + a_offset), pow + p_offset);
         p.life = r_life;
 
         explosion_particles.push_back(p);
@@ -97,22 +93,17 @@ bool UpdateMissile(Missile& m, float dt) {
     }
 
     if (m.life <= 0.0f) {
-        m.velocity.Multiply(drag);
-        m.velocity.Subtract({gravity.x * dt, gravity.y * dt});
-        m.position.Add({m.velocity.x * dt, m.velocity.y * dt});
-
-
+        m.velocity = (m.velocity * drag) - (gravity * dt);
+        m.position += m.velocity * dt;
         return true;
     }
 
     m.target = math::Vec2{float(target_x), float(target_y)};
-    m.position.Add({m.velocity.x * dt, m.velocity.y * dt});
+    m.position += m.velocity * dt;
 
-    math::Vec2 diff;
-    diff = m.target;
-    diff.Subtract(m.position);
+    math::Vec2 diff = m.target - m.position;
 
-    if (diff.DistanceSquared() <= 5.0f) {
+    if (raylib::Vector2LengthSqr(diff) <= 5.0f) {
         PlaySound(explode_sound);
         Explode(m.position, dt);
         ShakeScreen(dt);
@@ -127,17 +118,16 @@ bool UpdateMissile(Missile& m, float dt) {
         p.life = r_time;
         p.position = m.position;
 
-        float particle_angle = math::RadToDeg(m.velocity.Angle());
+        float particle_angle = math::RadToDeg(math::Vec2Angle(m.velocity));
         particle_angle += float(rnd::RandomInt(-3, 3));
 
-        p.velocity.FromAngle(math::DegToRad(-particle_angle));
-        p.velocity.SetDistance(32.0f * dt);
+        p.velocity = math::Vec2WithLength(math::Vec2FromAngle(math::DegToRad(-particle_angle)), 32.0f * dt);
 
         missile_particles.push_back(p);
     }
 
-    const float target_angle = math::RadToDeg(diff.Angle());
-    float current_angle = math::RadToDeg(m.velocity.Angle());
+    const float target_angle = math::RadToDeg(math::Vec2Angle(diff));
+    float current_angle = math::RadToDeg(math::Vec2Angle(m.velocity));
     float diff_angle = target_angle - current_angle;
     while (diff_angle < 0) {
         diff_angle += 360.0f;
@@ -149,11 +139,7 @@ bool UpdateMissile(Missile& m, float dt) {
         current_angle -= std::min(turn_radius * dt, 360.0f - diff_angle);
     }
 
-    math::Vec2 new_vel;
-    new_vel.FromAngle(math::DegToRad(current_angle));
-    new_vel.SetDistance(m.velocity.Distance());
-
-    m.velocity = new_vel;
+    m.velocity = math::Vec2WithLength(math::Vec2FromAngle(math::DegToRad(current_angle)), raylib::Vector2Length(m.velocity));
 
     return true;
 }
@@ -180,9 +166,8 @@ bool UpdateMissileParticle(MissileParticle& p, float dt) {
         return false;
     }
 
-    p.velocity.Multiply(drag);
-    p.velocity.Add({force.x * dt, force.y * dt});
-    p.position.Add({p.velocity.x * dt, p.velocity.y * dt});
+    p.velocity = raylib::Vector2Add(raylib::Vector2Multiply(p.velocity, drag), math::Vec2{force.x * dt, force.y * dt});
+    p.position = raylib::Vector2Add(p.position, math::Vec2{p.velocity.x * dt, p.velocity.y * dt});
 
     return true;
 }
@@ -206,9 +191,8 @@ bool UpdateExplosionParticle(ExplosionParticle& p, float dt) {
         return false;
     }
 
-    p.velocity.Multiply(drag);
-    p.velocity.Add({force.x * dt, force.y * dt});
-    p.position.Add({p.velocity.x * dt, p.velocity.y * dt});
+    p.velocity = (p.velocity * drag) + (force * dt);
+    p.position += p.velocity * dt;
 
     return true;
 }
@@ -223,8 +207,6 @@ void UpdateExplosionParticles(float dt) {
 }
 
 void UpdateMouse(float dt) {
-    // std::cout << "test" << dt << "\n";
-
     raylib::Vector2 mouse_pos = raylib::GetMousePosition();
     mouse_x = mouse_pos.x;
     mouse_y = mouse_pos.y;
@@ -269,11 +251,7 @@ void DrawMissile(const Missile& m) {
     const int x{static_cast<int>(m.position.x)};
     const int y{static_cast<int>(m.position.y)};
 
-    math::Vec2 v;
-    v = m.velocity;
-    v.Multiply({-1.0f, -1.0f});
-    v.SetDistance(16.0f);
-
+    const math::Vec2 v = math::Vec2WithLength(m.velocity * -1, 16.0f);
     const raylib::Color color = m.life < 0.0f ? dead_color : live_color;
 
     raylib::DrawRectangle(x - (w / 2), y - (h / 2), w, h, color);
@@ -283,17 +261,14 @@ void DrawMissile(const Missile& m) {
         return;
     }
 
-    math::Vec2 t;
-    t = m.target;
-    t.Subtract(m.position);
-    t.Subtract(m.velocity);
+    const math::Vec2 t = m.target - m.position - m.velocity;
 
     char text[256];
     snprintf(text, sizeof(text), "p:(% 3d, % 3d)\nv:(% 3d, %3d)\na:% 4.2f\nta:% 4.2f",
              x, y,
              int(m.velocity.x), int(m.velocity.y),
-             math::RadToDeg(m.velocity.Angle()),
-             math::RadToDeg(t.Angle()));
+             math::RadToDeg(math::Vec2Angle(m.velocity)),
+             math::RadToDeg(math::Vec2Angle(t)));
 
     DrawText(text, x + margin, y + margin, kFontSize, text_color);
 }
@@ -325,16 +300,10 @@ void DrawMissleParticles() {
 
 void DrawExplosionParticle(const ExplosionParticle& p) {
     const auto color = raylib::Color{ 255, 255, 255, 255 };
-    const float length = math::Clamp(p.velocity.Distance() / 200.0f, 0.0f, 1.0f);
+    const float length = math::Clamp(raylib::Vector2Length(p.velocity) / 200.0f);
 
-    math::Vec2 d;
-    d = p.velocity;
-    d.Multiply({-1.0f, -1.0f});
-    d.SetDistance(length * 12.0f);
-
-    math::Vec2 v;
-    v = p.position;
-    v.Add(d);
+    math::Vec2 d = math::Vec2WithLength(p.velocity * -1, length * 12.0f);
+    math::Vec2 v = p.position + d;
 
     const int x1 = int(p.position.x);
     const int y1 = int(p.position.y);
@@ -377,8 +346,7 @@ void DrawArrow() {
     const int target_x = mouse_x;
     const int target_y = mouse_y;
 
-    math::Vec2 v {float(target_x - center_x), float(target_y - center_y)};
-    v.SetDistance(24.0f);
+    math::Vec2 v = math::Vec2WithLength(math::Vec2{float(target_x - center_x), float(target_y - center_y)}, 24.0f);
 
     DrawLine(center_x, center_y, center_x + static_cast<int>(v.x), center_y + static_cast<int>(v.y), color);
 }
@@ -423,7 +391,7 @@ void DrawMouseInfo() {
 
 
     math::Vec2 v {float(mouse_window_x - center_x), float(mouse_window_y - center_y)};
-    const int angle = (int)math::RadToDeg(v.Angle());
+    const int angle = (int)math::RadToDeg(raylib::Vector2Length(v));
 
     char text[128];
     snprintf(text, sizeof(text),

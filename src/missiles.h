@@ -1,8 +1,7 @@
 #ifndef __MISSLES_H__
 #define __MISSLES_H__
 
-#include "vec2.h"
-
+#include "math.h"
 
 struct Missile {
     math::Vec2 position{0.0f, 0.0f};
