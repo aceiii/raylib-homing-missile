@@ -1,4 +1,5 @@
 #include <vector>
+#include <spdlog/spdlog.h>
 
 #include "ray.h"
 #include "game.h"
@@ -19,6 +20,8 @@ namespace {
     int mouse_y{0};
     int mouse_buttons{0};
 
+    int screen_width{0};
+    int screen_height{0};
     int screen_x{0};
     int screen_y{0};
 
@@ -35,8 +38,8 @@ void FireMissile() {
     const float life = 5.0f;
     const float velocity = 150.0f;
 
-    const int center_x = raylib::GetScreenWidth() / 2;
-    const int center_y = raylib::GetScreenHeight() / 2;
+    const int center_x = screen_width / 2;
+    const int center_y = screen_height / 2;
 
     const float rand_x = (float)rnd::RandomInt(-center_x, center_x);
     const float rand_y = (float)rnd::RandomInt(-center_y, center_y);
@@ -320,7 +323,7 @@ void DrawExplosionParticle(const ExplosionParticle& p) {
     const int x = x1 - (w / 2);
     const int y = y1 - (h / 2);
 
-    DrawRectangle(x + raylib::GetScreenWidth(), y + raylib::GetScreenHeight(), w, h, raylib::Color{ 190, 120, 0, 255 });
+    DrawRectangle(x + screen_width, y + screen_height, w, h, raylib::Color{ 190, 120, 0, 255 });
 
 }
 
@@ -336,15 +339,15 @@ void DrawCrosshair() {
     const int x = mouse_x;
     const int y = mouse_y;
 
-    DrawLine(x, 0, x, raylib::GetScreenHeight(), color);
-    DrawLine(0, y, raylib::GetScreenWidth(), y, color);
+    DrawLine(x, 0, x, screen_height, color);
+    DrawLine(0, y, screen_width, y, color);
 }
 
 void DrawArrow() {
     const auto color = raylib::Color{ 213, 246, 221, 255 };
 
-    const int center_x = raylib::GetScreenWidth() / 2;
-    const int center_y = raylib::GetScreenHeight() / 2;
+    const int center_x = screen_width / 2;
+    const int center_y = screen_height / 2;
 
     const int target_x = mouse_x;
     const int target_y = mouse_y;
@@ -364,7 +367,7 @@ void DrawFPS(int frame_time, int fps) {
     int width = 100;
     int height = 24;
 
-    DrawText(text, raylib::GetScreenWidth() - width - margin, raylib::GetScreenHeight() - height - margin, kFontSize, color);
+    DrawText(text, screen_width - width - margin, screen_height - height - margin, kFontSize, color);
 }
 
 void DrawParticleInfo() {
@@ -379,7 +382,7 @@ void DrawParticleInfo() {
              "% 4d missiles\n% 4d smoke\n% 4d sparks",
              m_count, s_count, p_count);
 
-    DrawText(text, margin, raylib::GetScreenHeight() - 40 - margin, kFontSize, color);
+    DrawText(text, margin, screen_height - 40 - margin, kFontSize, color);
 }
 
 void DrawMouseInfo() {
@@ -389,8 +392,8 @@ void DrawMouseInfo() {
     const int mouse_window_x = mouse_x;
     const int mouse_window_y = mouse_y;
 
-    const int center_x = raylib::GetScreenWidth() / 2;
-    const int center_y = raylib::GetScreenHeight() / 2;
+    const int center_x = screen_width / 2;
+    const int center_y = screen_height / 2;
 
 
     math::Vec2 v {float(mouse_window_x - center_x), float(mouse_window_y - center_y)};
@@ -403,15 +406,15 @@ void DrawMouseInfo() {
 
     int width = raylib::MeasureText(text, kFontSize);
 
-    DrawText(text, raylib::GetScreenWidth() - width - margin, margin, kFontSize, color);
+    DrawText(text, screen_width - width - margin, margin, kFontSize, color);
 }
 
 void DrawGrid() {
     static const auto color = raylib::Color{ 148, 148, 148, 255 };
     static const int grid_size = 60;
 
-    const int half_width = raylib::GetScreenWidth() / 2;
-    const int half_height = raylib::GetScreenHeight() / 2;
+    const int half_width = screen_width / 2;
+    const int half_height = screen_height / 2;
 
     const int grid_x_count = 2 * ((half_width / grid_size) + 1);
     const int grid_y_count = 2 * ((half_height / grid_size) + 1);
@@ -435,7 +438,9 @@ void DrawGrid() {
 
 
 bool Game::OnInit() {
-    screen = raylib::LoadRenderTexture(raylib::GetScreenWidth(), raylib::GetScreenHeight());
+    screen_width = GetScreenWidth();
+    screen_height = GetScreenHeight();
+    screen = raylib::LoadRenderTexture(screen_width, screen_height);
     explode_sound = raylib::LoadSound("resources/explode.mp3");
     launch_sound = raylib::LoadSound("resources/missile-launch.mp3");
     raylib::SetSoundVolume(launch_sound, 0.7);
@@ -458,8 +463,8 @@ void Game::OnUpdate(float dt) {
 }
 
 void Game::OnRender() {
-    const float screen_width = raylib::GetScreenWidth();
-    const float screen_height = raylib::GetScreenHeight();
+    screen_width = GetScreenWidth();
+    screen_height = GetScreenHeight();
 
     raylib::BeginTextureMode(screen);
     raylib::ClearBackground({ 127, 127, 127, 255 });
@@ -476,8 +481,8 @@ void Game::OnRender() {
 
     raylib::DrawTexturePro(
         screen.texture,
-        raylib::Rectangle{ 0, 0, screen_width, -screen_height },
-        raylib::Rectangle{ static_cast<float>(screen_x), static_cast<float>(screen_y), screen_width, screen_height },
+        raylib::Rectangle{ 0, 0, static_cast<float>(screen_width), -static_cast<float>(screen_height) },
+        raylib::Rectangle{ static_cast<float>(screen_x), static_cast<float>(screen_y), static_cast<float>(screen_width), static_cast<float>(screen_height) },
         raylib::Vector2{ 0, 0 },
         0.0f,
         raylib::WHITE

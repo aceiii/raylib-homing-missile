@@ -11,9 +11,8 @@ public:
     int GetFPS() const;
     
 protected:
-    bool Init();
-    void Shutdown();
-    void MainLoop();
+    int GetScreenWidth() const;
+    int GetScreenHeight() const;
 
     virtual bool OnInit() = 0;
     virtual void OnCleanup() = 0;
@@ -22,6 +21,9 @@ protected:
     virtual bool OnProcessEvents() = 0; 
 
 private:
+    bool Init();
+    void Shutdown();
+    void MainLoop();
     void UpdateFPS(float dt);
 };
 

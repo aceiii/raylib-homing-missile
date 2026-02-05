@@ -73,3 +73,11 @@ int Application::GetFrameTime() const {
 int Application::GetFPS() const {
     return fps;
 }
+
+int Application::GetScreenWidth() const {
+    return raylib::GetScreenWidth();
+}
+
+int Application::GetScreenHeight() const {
+    return raylib::GetScreenHeight();
+}
