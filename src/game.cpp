@@ -11,6 +11,7 @@ namespace {
 
     raylib::RenderTexture2D screen;
     raylib::Sound explode_sound;
+    raylib::Sound launch_sound;
 
     bool debug{false};
 
@@ -48,6 +49,8 @@ void FireMissile() {
     m.velocity = math::Vec2WithLength(math::Vec2{rand_x, rand_y}, velocity + rand_v);
 
     missiles.push_back(m);
+
+    raylib::PlaySound(launch_sound);
 }
 
 void Explode(const math::Vec2& pos, float dt) {
@@ -434,10 +437,13 @@ void DrawGrid() {
 bool Game::OnInit() {
     screen = raylib::LoadRenderTexture(raylib::GetScreenWidth(), raylib::GetScreenHeight());
     explode_sound = raylib::LoadSound("resources/explode.mp3");
+    launch_sound = raylib::LoadSound("resources/missile-launch.mp3");
+    raylib::SetSoundVolume(launch_sound, 0.7);
     return true;
 }
 
 void Game::OnCleanup() {
+    raylib::UnloadSound(launch_sound);
     raylib::UnloadSound(explode_sound);
     raylib::UnloadRenderTexture(screen);
 }
