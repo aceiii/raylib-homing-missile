@@ -13,6 +13,21 @@ namespace {
     int fps{0};
 }
 
+static void RaylibSpdlogCallback(int log_level, const char *text, va_list args) {
+    static char buffer[1024];
+    vsnprintf(buffer, sizeof(buffer), text, args);
+
+    switch (log_level) {
+        case raylib::LOG_TRACE: spdlog::trace(buffer); break;
+        case raylib::LOG_DEBUG: spdlog::debug(buffer); break;
+        case raylib::LOG_INFO: spdlog::info(buffer); break;
+        case raylib::LOG_WARNING: spdlog::warn(buffer); break;
+        case raylib::LOG_ERROR: spdlog::error(buffer); break;
+        case raylib::LOG_FATAL: spdlog::critical(buffer); break;
+        default: break;
+    }
+}
+
 int Application::Run() {
     if (!Init()) {
         Shutdown();
@@ -25,7 +40,10 @@ int Application::Run() {
 }
 
 bool Application::Init() {
-    spdlog::info("Initializing interface");
+    spdlog::info("Initializing application");
+
+    raylib::SetTraceLogCallback(RaylibSpdlogCallback);
+
     raylib::InitWindow(kScreenWidth, kScreenHeight, kWindowTitle);
     raylib::InitAudioDevice();
     raylib::SetExitKey(raylib::KEY_ESCAPE);
