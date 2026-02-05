@@ -13,7 +13,7 @@ namespace {
     int fps{0};
 }
 
-static void RaylibSpdlogCallback(int log_level, const char *text, va_list args) {
+static void RaylibSpdlogCallback(int log_level, const char* text, va_list args) {
     static char buffer[1024];
     vsnprintf(buffer, sizeof(buffer), text, args);
 

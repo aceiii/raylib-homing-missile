@@ -11,10 +11,10 @@ namespace math {
     float DegToRad(float deg);
     float RadToDeg(float rad);
     float Clamp(float value, float min = 0.0f, float max = 1.0f);
-    float Vec2Angle(const Vec2 &v);
+    float Vec2Angle(const Vec2& v);
 
     Vec2 Vec2FromAngle(float radians);
-    Vec2 Vec2WithLength(const Vec2 &v, float length);
+    Vec2 Vec2WithLength(const Vec2& v, float length);
 }
 
 
